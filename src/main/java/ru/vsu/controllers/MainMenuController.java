@@ -4,6 +4,7 @@ import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import ru.vsu.FXEngine;
+import ru.vsu.config.CurrentGameSettings;
 
 /**
  * @author Ivan Rovenskiy
@@ -18,5 +19,16 @@ public class MainMenuController {
     @FXML
     void startNewGameAction(ActionEvent event) {
         FXEngine.setPrimaryScene(FXEngine.getGameFieldScene());
+    }
+
+    @FXML
+    void initialize() {
+        gameSettingsInitialize();
+    }
+
+    private void gameSettingsInitialize() {
+        new CurrentGameSettings.Builder()
+                .setGameFieldSize(10)
+                .build();
     }
 }
