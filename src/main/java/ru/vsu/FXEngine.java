@@ -19,10 +19,11 @@ public class FXEngine {
     static void initFx(Stage stage) throws IOException {
         primaryStage = stage;
         primaryStage.setWidth(1280);
-        primaryStage.setHeight(720);
+        primaryStage.setHeight(900);
 
         mainMenuScene = new Scene(FXEngine.loadFXML("main_menu.fxml"));
         gameFieldScene = new Scene(FXEngine.loadFXML("game_field.fxml"));
+        gameFieldScene.getStylesheets().add("ru/vsu/styles/game_field.css");
 
         setPrimaryScene(mainMenuScene);
     }
