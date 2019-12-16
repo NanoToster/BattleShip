@@ -1,0 +1,10 @@
+.common-grid-cell {
+    -fx-background-color: #cde0ff;
+    -fx-background-radius: 0;
+    -fx-border-width: 1;
+    -fx-border-color: #000000;
+}
+
+.under-mouse-grid-cell {
+    -fx-background-color: #899bff;
+}
