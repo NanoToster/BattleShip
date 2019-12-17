@@ -4,14 +4,20 @@ import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.geometry.HPos;
 import javafx.geometry.VPos;
-import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextArea;
 import javafx.scene.layout.ColumnConstraints;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.RowConstraints;
 import ru.vsu.FXEngine;
+import ru.vsu.components.GameFieldButton;
+import ru.vsu.components.GameFieldButton.FieldType;
 import ru.vsu.config.CurrentGameSettings;
+import ru.vsu.domain.CellType;
+import ru.vsu.game_engine.GamePrepareEngine;
+import ru.vsu.utils.StaticGameInfoAccessor;
+
+import static ru.vsu.game_engine.StyleSearchEngine.processCellStyle;
 
 /**
  * @author Ivan Rovenskiy
@@ -23,7 +29,9 @@ public class GameFieldController {
     @FXML
     private GridPane opponentGridPane;
     @FXML
-    private TextArea battleLogTextArea;
+    private TextArea gameLogArea;
+
+    private GamePrepareEngine gamePrepareEngine;
 
     @FXML
     void backToMenuAction(ActionEvent event) {
@@ -32,14 +40,19 @@ public class GameFieldController {
 
     @FXML
     void initialize() {
-        initPlayersGridPane(playerGridPane);
-        addEmptyCellsToGridPane(playerGridPane);
+        gamePrepareEngine = new GamePrepareEngine();
+        StaticGameInfoAccessor.setGameLogArea(gameLogArea);
+        StaticGameInfoAccessor.setPlayerGridPane(playerGridPane);
+        StaticGameInfoAccessor.setOpponentGridPane(opponentGridPane);
 
-        initPlayersGridPane(opponentGridPane);
-        addEmptyCellsToGridPane(opponentGridPane);
+        initGridPane(playerGridPane);
+        addEmptyCellsToGridPane(playerGridPane, FieldType.Player);
+
+        initGridPane(opponentGridPane);
+        addEmptyCellsToGridPane(opponentGridPane, FieldType.Enemy);
     }
 
-    private void initPlayersGridPane(GridPane gridPane) {
+    private void initGridPane(GridPane gridPane) {
         gridPane.getColumnConstraints().removeAll(gridPane.getColumnConstraints());
         gridPane.getRowConstraints().removeAll(gridPane.getRowConstraints());
 
@@ -60,16 +73,18 @@ public class GameFieldController {
         }
     }
 
-    private void addEmptyCellsToGridPane(GridPane gridPane) {
+    private void addEmptyCellsToGridPane(GridPane gridPane, FieldType fieldType) {
         final CurrentGameSettings currentGameSettings = CurrentGameSettings.getCurrentGameSettings();
         for (int row = 1; row < currentGameSettings.getGameFieldSize() + 1; row++) {
             for (int column = 1; column < currentGameSettings.getGameFieldSize() + 1; column++) {
-                gridPane.add(new Button() {{
+                gridPane.add(new GameFieldButton(column, row, fieldType) {{
+                    setCellType(CellType.Sea);
                     setMaxHeight(Double.MAX_VALUE);
                     setMaxWidth(Double.MAX_VALUE);
-                    getStyleClass().add("common-grid-cell");
+                    getStyleClass().add(processCellStyle(getCellType()));
                     setOnMouseEntered(mouseEvent -> getStyleClass().add("under-mouse-grid-cell"));
                     setOnMouseExited(mouseEvent -> getStyleClass().remove("under-mouse-grid-cell"));
+                    setOnMousePressed(mouseEvent -> gamePrepareEngine.processGameFieldButtonClick(this));
                 }}, column, row);
             }
         }
