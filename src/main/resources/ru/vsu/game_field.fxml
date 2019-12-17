@@ -32,6 +32,6 @@
             </rowConstraints>
         </GridPane>
         <TextArea fx:id="battleLogTextArea" layoutX="124.0" layoutY="680.0" prefHeight="200.0" prefWidth="600.0"
-                  AnchorPane.bottomAnchor="20.0" AnchorPane.leftAnchor="30.0"/>
+                  AnchorPane.bottomAnchor="20.0" AnchorPane.leftAnchor="340.0" AnchorPane.rightAnchor="340.0"/>
     </children>
 </AnchorPane>
