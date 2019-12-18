@@ -2,6 +2,7 @@ package ru.vsu.components;
 
 import javafx.scene.control.Button;
 import ru.vsu.domain.CellType;
+import ru.vsu.game_engine.StyleSearchEngine;
 
 /**
  * @author Ivan Rovenskiy
@@ -22,6 +23,8 @@ public class GameFieldButton extends Button {
 
     public void setCellType(CellType cellType) {
         this.cellType = cellType;
+        this.getStyleClass().removeAll(this.getStyleClass());
+        this.getStyleClass().addAll(StyleSearchEngine.processCellStyle(cellType));
     }
 
     public int getColumn() {

@@ -81,7 +81,6 @@ public class GameFieldController {
                     setCellType(CellType.Sea);
                     setMaxHeight(Double.MAX_VALUE);
                     setMaxWidth(Double.MAX_VALUE);
-                    getStyleClass().add(processCellStyle(getCellType()));
                     setOnMouseEntered(mouseEvent -> getStyleClass().add("under-mouse-grid-cell"));
                     setOnMouseExited(mouseEvent -> getStyleClass().remove("under-mouse-grid-cell"));
                     setOnMousePressed(mouseEvent -> gamePrepareEngine.processGameFieldButtonClick(this));

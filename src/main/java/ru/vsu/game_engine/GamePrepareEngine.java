@@ -2,13 +2,12 @@ package ru.vsu.game_engine;
 
 import ru.vsu.components.GameFieldButton;
 import ru.vsu.components.GameFieldButton.FieldType;
+import ru.vsu.config.CurrentGameSettings;
 import ru.vsu.domain.CellType;
-import ru.vsu.exceptions.GameBaseException;
 import ru.vsu.utils.StaticGameInfoAccessor;
 
+import java.util.ArrayList;
 import java.util.List;
-
-import static ru.vsu.game_engine.StyleSearchEngine.processCellStyle;
 
 /**
  * @author Ivan Rovenskiy
@@ -17,20 +16,13 @@ import static ru.vsu.game_engine.StyleSearchEngine.processCellStyle;
 public class GamePrepareEngine {
     // TODO maybe need to do interface GameEngine with processGameFieldButtonClick method
     //  and change instances when game staging changes
-    private int shipsPreparedCount;
-    private boolean isShipPreparing;
-    // ship queue:
-    // 4CellsShip ->
-    // 3CellsShip * 2 ->
-    // 2CellsShip * 3 ->
-    // 1CellsShip * 4 ->
-    // submarine * 1 ->
-    // mine * 3 ->
-    // minesweeper * 1
+
+    private CurrentGameSettings currentGameSettings;
+    private PreparingShip preparingShip;
 
     public GamePrepareEngine() {
-        this.shipsPreparedCount = 0;
-        this.isShipPreparing = false;
+        this.preparingShip = null;
+        this.currentGameSettings = CurrentGameSettings.getCurrentGameSettings();
     }
 
     public void processGameFieldButtonClick(GameFieldButton gameFieldButton) {
@@ -38,62 +30,176 @@ public class GamePrepareEngine {
             return;
         }
 
-        final CellType requiredCellType = findRequiredCellType();
-        if (List.of(CellType.CommonShip_4, CellType.CommonShip_3, CellType.CommonShip_2, CellType.CommonShip_1)
-                .contains(requiredCellType)) {
-
-            if (!this.isShipPreparing) {
-                if (checkStartPlace(gameFieldButton.getRow(), gameFieldButton.getColumn())) {
-                    this.isShipPreparing = true;
-
-                    StaticGameInfoAccessor.appendGameLog("You start battleship placement");
-
-                    if (gameFieldButton.getCellType().equals(CellType.Sea)) {
-                        gameFieldButton.setCellType(requiredCellType);
-                        gameFieldButton.getStyleClass().add(processCellStyle(gameFieldButton.getCellType()));
-                    }
-                }
-            } else {
-                if (checkEndPlaceValidation(gameFieldButton.getRow(), gameFieldButton.getColumn())) {
-                    this.isShipPreparing = false;
-
-                    StaticGameInfoAccessor.appendGameLog("You finish battleship placement");
-                }
+        if (this.preparingShip == null) {
+            final CellType nextShipInQueueType = currentGameSettings.getShipPlacementQueue().peek();
+            if (nextShipInQueueType == null) {
+                StaticGameInfoAccessor.appendGameLog("Prepare game ends");
+                return;
+            }
+            if (!checkStartPlace(gameFieldButton.getRow(), gameFieldButton.getColumn(), nextShipInQueueType)) {
+                StaticGameInfoAccessor.appendGameLog("Invalid cell to place " + nextShipInQueueType);
+                return;
             }
 
-            if (!this.isShipPreparing) {
-                this.shipsPreparedCount++;
+            StaticGameInfoAccessor.appendGameLog("You start " + nextShipInQueueType + " placement");
+            currentGameSettings.getShipPlacementQueue().remove(nextShipInQueueType);
+            if (nextShipInQueueType.getRange() > 1) {
+                gameFieldButton.setCellType(CellType.Selected);
+                this.preparingShip = new PreparingShip(gameFieldButton.getColumn(), gameFieldButton.getRow(), nextShipInQueueType);
+            }
+
+            if (nextShipInQueueType.getRange() == 1) {
+                killCellsAroundCell(new CellPoint(gameFieldButton.getColumn(), gameFieldButton.getRow()));
+                gameFieldButton.setCellType(nextShipInQueueType);
+            }
+        } else {
+            if (endPlacement(gameFieldButton.getRow(), gameFieldButton.getColumn())) {
+
+                StaticGameInfoAccessor.appendGameLog("You finish battleship placement");
+                this.preparingShip = null;
             }
         }
     }
 
-    private boolean checkStartPlace(int row, int column) {
-        // TODO add validation
+    private boolean checkStartPlace(int row, int column, CellType requiredCellType) {
+        final GameFieldButton gameFieldButton = StaticGameInfoAccessor.getCellInPlayersGrid(row, column);
+        if (gameFieldButton == null) {
+            return false;
+        }
+        if (gameFieldButton.getCellType().equals(CellType.Sea)) {
+            return true;
+        }
+        if (gameFieldButton.getCellType().equals(CellType.DeadZone) && requiredCellType.equals(CellType.Submarine)) {
+            return true;
+        }
+        return false;
+    }
+
+    private boolean endPlacement(int row, int column) {
+        if (preparingShip.getRow() == row) {
+            return processHorizontalPlacement(column);
+        }
+        if (preparingShip.getColumn() == column) {
+            return processVerticalPlacement(row);
+        }
+
+        StaticGameInfoAccessor.appendGameLog("Wrong place for ship placement finish");
+        return false;
+    }
+
+    private boolean processVerticalPlacement(int vectorRow) {
+        int startRow = preparingShip.getRow();
+        int column = preparingShip.getColumn();
+        List<CellPoint> cellPointList = new ArrayList<>();
+
+        int inc = vectorRow > startRow ? 1 : -1;
+        for (int range = 0; Math.abs(range) < preparingShip.cellType.getRange(); range = range + inc) {
+            if (startRow + range < 1 || startRow + range > currentGameSettings.getGameFieldSize()) {
+                StaticGameInfoAccessor.appendGameLog("To close to game field border");
+                return false;
+            }
+            if (List.of(CellType.Sea, CellType.Selected)
+                    .contains(StaticGameInfoAccessor.getCellInPlayersGrid(startRow + range, column).getCellType())) {
+                cellPointList.add(new CellPoint(column, startRow + range));
+            } else {
+                StaticGameInfoAccessor.appendGameLog("Other ship or dead zone interrupt placement");
+                return false;
+            }
+        }
+        finishPlacement(cellPointList);
         return true;
     }
 
-    private boolean checkEndPlaceValidation(int row, int column) {
-        // TODO add validation
+    private boolean processHorizontalPlacement(int vectorColumn) {
+        int startColumn = preparingShip.getColumn();
+        int row = preparingShip.getRow();
+        List<CellPoint> cellPointList = new ArrayList<>();
+
+        int inc = vectorColumn > startColumn ? 1 : -1;
+        for (int range = 0; Math.abs(range) < preparingShip.cellType.getRange(); range = range + inc) {
+            if (startColumn + range < 1 || startColumn + range > currentGameSettings.getGameFieldSize()) {
+                StaticGameInfoAccessor.appendGameLog("To close to game field border");
+                return false;
+            }
+            if (List.of(CellType.Sea, CellType.Selected)
+                    .contains(StaticGameInfoAccessor.getCellInPlayersGrid(row, startColumn + range).getCellType())) {
+                cellPointList.add(new CellPoint(startColumn + range, row));
+            } else {
+                StaticGameInfoAccessor.appendGameLog("Other ship or dead zone interrupt placement");
+                return false;
+            }
+        }
+        finishPlacement(cellPointList);
         return true;
     }
 
-    private CellType findRequiredCellType() {
-        if (shipsPreparedCount == 0) {
-            return CellType.CommonShip_4;
-        } else if (shipsPreparedCount <= 3) {
-            return CellType.CommonShip_3;
-        } else if (shipsPreparedCount <= 6) {
-            return CellType.CommonShip_2;
-        } else if (shipsPreparedCount <= 10) {
-            return CellType.CommonShip_1;
-        } else if (shipsPreparedCount == 11) {
-            return CellType.Submarine;
-        } else if (shipsPreparedCount <= 14) {
-            return CellType.Mine;
-        } else if (shipsPreparedCount == 15) {
-            return CellType.Minesweeper;
-        } else {
-            throw new GameBaseException.PrepareGameException("Unexpected ship number");
+    private void finishPlacement(List<CellPoint> cellPointList) {
+        killCellsAroundCell(cellPointList);
+        for (CellPoint cellPoint : cellPointList) {
+            StaticGameInfoAccessor.getCellInPlayersGrid(cellPoint.getRow(), cellPoint.getColumn())
+                    .setCellType(preparingShip.getCellType());
+        }
+    }
+
+    private void killCellsAroundCell(CellPoint cellPoint) {
+        StaticGameInfoAccessor.getPlayerGridPane().getChildren()
+                .forEach((node) -> {
+                    if (node instanceof GameFieldButton) {
+                        GameFieldButton checkingCell = (GameFieldButton) node;
+                        if (Math.abs(checkingCell.getRow() - cellPoint.getRow()) <= 1
+                                && Math.abs(checkingCell.getColumn() - cellPoint.getColumn()) <= 1
+                                && !CellType.getAllUnitsList().contains(checkingCell.getCellType())) {
+                            checkingCell.setCellType(CellType.DeadZone);
+                        }
+                    }
+                });
+    }
+
+    private void killCellsAroundCell(List<CellPoint> cellPointList) {
+        for (CellPoint cellPoint : cellPointList) {
+            killCellsAroundCell(cellPoint);
+        }
+    }
+
+    private static class PreparingShip {
+        private int column;
+        private int row;
+        private CellType cellType;
+
+        public PreparingShip(int column, int row, CellType cellType) {
+            this.column = column;
+            this.row = row;
+            this.cellType = cellType;
+        }
+
+        public int getColumn() {
+            return column;
+        }
+
+        public int getRow() {
+            return row;
+        }
+
+        public CellType getCellType() {
+            return cellType;
+        }
+    }
+
+    private static class CellPoint {
+        private int column;
+        private int row;
+
+        public CellPoint(int column, int row) {
+            this.column = column;
+            this.row = row;
+        }
+
+        public int getColumn() {
+            return column;
+        }
+
+        public int getRow() {
+            return row;
         }
     }
 }

@@ -1,6 +1,11 @@
 package ru.vsu.config;
 
+import ru.vsu.domain.CellType;
 import ru.vsu.exceptions.CommonBaseException;
+
+import java.util.ArrayDeque;
+import java.util.LinkedList;
+import java.util.Queue;
 
 /**
  * @author Ivan Rovenskiy
@@ -17,6 +22,7 @@ public class CurrentGameSettings {
     private int minesCount;
     private int submarinesCount;
     private int minesweeperCount;
+    private Queue<CellType> shipPlacementQueue;
 
     private CurrentGameSettings() {
     }
@@ -55,6 +61,10 @@ public class CurrentGameSettings {
 
     public int getMinesweeperCount() {
         return minesweeperCount;
+    }
+
+    public Queue<CellType> getShipPlacementQueue() {
+        return shipPlacementQueue;
     }
 
     public static class Builder {
@@ -106,11 +116,37 @@ public class CurrentGameSettings {
 
         public CurrentGameSettings build() {
             if (delegate != null) {
+                setShipPlacementQueue();
                 currentGameSettings = delegate;
                 delegate = null;
                 return currentGameSettings;
             } else {
                 throw new CommonBaseException.BuilderReuseException("CurrentGameSettings builder reusing");
+            }
+        }
+
+        private void setShipPlacementQueue() {
+            delegate.shipPlacementQueue = new ArrayDeque<>();
+            for (int i = 0; i < delegate.shipWith_4_CellsCount; i++) {
+                delegate.shipPlacementQueue.offer(CellType.CommonShip_4);
+            }
+            for (int i = 0; i < delegate.shipWith_3_CellsCount; i++) {
+                delegate.shipPlacementQueue.offer(CellType.CommonShip_3);
+            }
+            for (int i = 0; i < delegate.shipWith_2_CellsCount; i++) {
+                delegate.shipPlacementQueue.offer(CellType.CommonShip_2);
+            }
+            for (int i = 0; i < delegate.shipWith_1_CellsCount; i++) {
+                delegate.shipPlacementQueue.offer(CellType.CommonShip_1);
+            }
+            for (int i = 0; i < delegate.submarinesCount; i++) {
+                delegate.shipPlacementQueue.offer(CellType.Submarine);
+            }
+            for (int i = 0; i < delegate.minesCount; i++) {
+                delegate.shipPlacementQueue.offer(CellType.Mine);
+            }
+            for (int i = 0; i < delegate.minesweeperCount; i++) {
+                delegate.shipPlacementQueue.offer(CellType.Minesweeper);
             }
         }
     }
