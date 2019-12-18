@@ -28,7 +28,14 @@ public class MainMenuController {
 
     private void gameSettingsInitialize() {
         new CurrentGameSettings.Builder()
-                .setGameFieldSize(10)
+                .setGameFieldSize(18)
+                .setShipWith_4_CellsCount(1)
+                .setShipWith_3_CellsCount(2)
+                .setShipWith_2_CellsCount(3)
+                .setShipWith_1_CellsCount(4)
+                .setMinesCount(3)
+                .setMineSweepersCount(1)
+                .setSubmarinesCount(1)
                 .build();
     }
 }

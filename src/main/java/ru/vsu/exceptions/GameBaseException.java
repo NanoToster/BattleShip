@@ -15,4 +15,10 @@ public class GameBaseException extends RuntimeException {
     public String getMessage() {
         return message;
     }
+
+    public static class PrepareGameException extends GameBaseException {
+        public PrepareGameException(String message) {
+            super(message);
+        }
+    }
 }
