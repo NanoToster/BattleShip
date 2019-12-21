@@ -20,22 +20,26 @@
     -fx-background-color: #000000;
 }
 
-.mine-cells-grid-cell {
+.mine-grid-cell {
     -fx-background-color: #2cff01;
 }
 
-.submarine-cells-grid-cell {
+.submarine-grid-cell {
     -fx-background-color: #00ffff;
 }
 
-.minesweeper-cells-grid-cell {
+.minesweeper-grid-cell {
     -fx-background-color: #ff0fff;
 }
 
-.dead-ship-cells-grid-cell {
+.dead-ship-grid-cell {
     -fx-background-color: #ff000f;
 }
 
-.dead-zone-cells-grid-cell {
+.dead-zone-grid-cell {
     -fx-background-color: #d7b8ff;
+}
+
+.shooted-grid-cell {
+    -fx-background-color: rgba(46, 62, 78, 0.52);
 }

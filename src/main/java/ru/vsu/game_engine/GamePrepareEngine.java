@@ -13,10 +13,7 @@ import java.util.List;
  * @author Ivan Rovenskiy
  * 18 December 2019
  */
-public class GamePrepareEngine {
-    // TODO maybe need to do interface GameEngine with processGameFieldButtonClick method
-    //  and change instances when game staging changes
-
+public class GamePrepareEngine implements GameEngine {
     private CurrentGameSettings currentGameSettings;
     private PreparingShip preparingShip;
 
@@ -25,6 +22,15 @@ public class GamePrepareEngine {
         this.currentGameSettings = CurrentGameSettings.getCurrentGameSettings();
     }
 
+    @Override
+    public GameStatus getGameStatus() {
+        if (currentGameSettings.getShipPlacementQueue().peek() == null) {
+            return GameStatus.PreparingEnd;
+        }
+        return GameStatus.Preparing;
+    }
+
+    @Override
     public void processGameFieldButtonClick(GameFieldButton gameFieldButton) {
         if (gameFieldButton.getFieldType().equals(FieldType.Enemy)) {
             return;
@@ -43,14 +49,15 @@ public class GamePrepareEngine {
 
             StaticGameInfoAccessor.appendGameLog("You start " + nextShipInQueueType + " placement");
             currentGameSettings.getShipPlacementQueue().remove(nextShipInQueueType);
+            this.preparingShip = new PreparingShip(gameFieldButton.getColumn(), gameFieldButton.getRow(), nextShipInQueueType);
             if (nextShipInQueueType.getRange() > 1) {
                 gameFieldButton.setCellType(CellType.Selected);
-                this.preparingShip = new PreparingShip(gameFieldButton.getColumn(), gameFieldButton.getRow(), nextShipInQueueType);
             }
 
             if (nextShipInQueueType.getRange() == 1) {
                 killCellsAroundCell(new CellPoint(gameFieldButton.getColumn(), gameFieldButton.getRow()));
-                gameFieldButton.setCellType(nextShipInQueueType);
+                finishPlacement(List.of(new CellPoint(gameFieldButton.getColumn(), gameFieldButton.getRow())));
+                this.preparingShip = null;
             }
         } else {
             if (endPlacement(gameFieldButton.getRow(), gameFieldButton.getColumn())) {
@@ -138,6 +145,10 @@ public class GamePrepareEngine {
         for (CellPoint cellPoint : cellPointList) {
             StaticGameInfoAccessor.getCellInPlayersGrid(cellPoint.getRow(), cellPoint.getColumn())
                     .setCellType(preparingShip.getCellType());
+
+            // TODO rework AI ship placement in future
+            StaticGameInfoAccessor.getCellInOpponentsGrid(cellPoint.getRow(), cellPoint.getColumn())
+                    .setCellType(CellType.valueOf("Inv_" + preparingShip.getCellType().name()));
         }
     }
 

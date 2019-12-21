@@ -14,10 +14,10 @@ import ru.vsu.components.GameFieldButton;
 import ru.vsu.components.GameFieldButton.FieldType;
 import ru.vsu.config.CurrentGameSettings;
 import ru.vsu.domain.CellType;
+import ru.vsu.game_engine.GameBattleEngine;
+import ru.vsu.game_engine.GameEngine;
 import ru.vsu.game_engine.GamePrepareEngine;
 import ru.vsu.utils.StaticGameInfoAccessor;
-
-import static ru.vsu.game_engine.StyleSearchEngine.processCellStyle;
 
 /**
  * @author Ivan Rovenskiy
@@ -31,7 +31,7 @@ public class GameFieldController {
     @FXML
     private TextArea gameLogArea;
 
-    private GamePrepareEngine gamePrepareEngine;
+    private GameEngine gameEngine;
 
     @FXML
     void backToMenuAction(ActionEvent event) {
@@ -40,16 +40,16 @@ public class GameFieldController {
 
     @FXML
     void initialize() {
-        gamePrepareEngine = new GamePrepareEngine();
+        gameEngine = new GamePrepareEngine();
         StaticGameInfoAccessor.setGameLogArea(gameLogArea);
         StaticGameInfoAccessor.setPlayerGridPane(playerGridPane);
         StaticGameInfoAccessor.setOpponentGridPane(opponentGridPane);
 
         initGridPane(playerGridPane);
-        addEmptyCellsToGridPane(playerGridPane, FieldType.Player);
+        addEmptyCellsToPlayerGridPane(playerGridPane);
 
         initGridPane(opponentGridPane);
-        addEmptyCellsToGridPane(opponentGridPane, FieldType.Enemy);
+        addEmptyCellsToEnemyGridPane(opponentGridPane);
     }
 
     private void initGridPane(GridPane gridPane) {
@@ -73,17 +73,38 @@ public class GameFieldController {
         }
     }
 
-    private void addEmptyCellsToGridPane(GridPane gridPane, FieldType fieldType) {
+    private void addEmptyCellsToPlayerGridPane(GridPane gridPane) {
         final CurrentGameSettings currentGameSettings = CurrentGameSettings.getCurrentGameSettings();
         for (int row = 1; row < currentGameSettings.getGameFieldSize() + 1; row++) {
             for (int column = 1; column < currentGameSettings.getGameFieldSize() + 1; column++) {
-                gridPane.add(new GameFieldButton(column, row, fieldType) {{
+                gridPane.add(new GameFieldButton(column, row, FieldType.Player) {{
                     setCellType(CellType.Sea);
                     setMaxHeight(Double.MAX_VALUE);
                     setMaxWidth(Double.MAX_VALUE);
                     setOnMouseEntered(mouseEvent -> getStyleClass().add("under-mouse-grid-cell"));
                     setOnMouseExited(mouseEvent -> getStyleClass().remove("under-mouse-grid-cell"));
-                    setOnMousePressed(mouseEvent -> gamePrepareEngine.processGameFieldButtonClick(this));
+                    setOnMousePressed(mouseEvent -> {
+                        if (gameEngine.getGameStatus().equals(GameEngine.GameStatus.PreparingEnd)) {
+                            gameEngine = new GameBattleEngine();
+                        }
+                        gameEngine.processGameFieldButtonClick(this);
+                    });
+                }}, column, row);
+            }
+        }
+    }
+
+    private void addEmptyCellsToEnemyGridPane(GridPane gridPane) {
+        final CurrentGameSettings currentGameSettings = CurrentGameSettings.getCurrentGameSettings();
+        for (int row = 1; row < currentGameSettings.getGameFieldSize() + 1; row++) {
+            for (int column = 1; column < currentGameSettings.getGameFieldSize() + 1; column++) {
+                gridPane.add(new GameFieldButton(column, row, FieldType.Enemy) {{
+                    setCellType(CellType.Sea);
+                    setMaxHeight(Double.MAX_VALUE);
+                    setMaxWidth(Double.MAX_VALUE);
+                    setOnMouseEntered(mouseEvent -> getStyleClass().add("under-mouse-grid-cell"));
+                    setOnMouseExited(mouseEvent -> getStyleClass().remove("under-mouse-grid-cell"));
+                    setOnMousePressed(mouseEvent -> gameEngine.processGameFieldButtonClick(this));
                 }}, column, row);
             }
         }
