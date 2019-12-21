@@ -28,8 +28,20 @@ public class StaticGameInfoAccessor {
         return playerGridPane;
     }
 
+    public static GridPane getOpponentGridPane() {
+        return opponentGridPane;
+    }
+
     public static GameFieldButton getCellInPlayersGrid(final int row, final int column) {
-        final Optional<Node> nodeFromPlayersGridOptional = playerGridPane.getChildren().stream()
+        return getCellFromGrid(playerGridPane, row, column);
+    }
+
+    public static GameFieldButton getCellInOpponentsGrid(final int row, final int column) {
+        return getCellFromGrid(opponentGridPane, row, column);
+    }
+
+    private static GameFieldButton getCellFromGrid(final GridPane gridPane, final int row, final int column) {
+        final Optional<Node> nodeFromPlayersGridOptional = gridPane.getChildren().stream()
                 .filter(node -> GridPane.getColumnIndex(node) == column && GridPane.getRowIndex(node) == row)
                 .findFirst();
 
@@ -38,10 +50,6 @@ public class StaticGameInfoAccessor {
 
     public static void setPlayerGridPane(GridPane playerGridPane) {
         StaticGameInfoAccessor.playerGridPane = playerGridPane;
-    }
-
-    public static GridPane getOpponentGridPane() {
-        return opponentGridPane;
     }
 
     public static void setOpponentGridPane(GridPane opponentGridPane) {
