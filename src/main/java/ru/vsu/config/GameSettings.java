@@ -4,15 +4,14 @@ import ru.vsu.domain.CellType;
 import ru.vsu.exceptions.CommonBaseException;
 
 import java.util.ArrayDeque;
-import java.util.LinkedList;
 import java.util.Queue;
 
 /**
  * @author Ivan Rovenskiy
  * 16 December 2019
  */
-public class CurrentGameSettings {
-    private static CurrentGameSettings currentGameSettings;
+public class GameSettings {
+    private static GameSettings gameSettings;
     private int gameFieldSize;
 
     private int shipWith_4_CellsCount;
@@ -24,11 +23,11 @@ public class CurrentGameSettings {
     private int minesweeperCount;
     private Queue<CellType> shipPlacementQueue;
 
-    private CurrentGameSettings() {
+    private GameSettings() {
     }
 
-    public static CurrentGameSettings getCurrentGameSettings() {
-        return currentGameSettings;
+    public static GameSettings getGameSettings() {
+        return gameSettings;
     }
 
     public int getGameFieldSize() {
@@ -68,10 +67,10 @@ public class CurrentGameSettings {
     }
 
     public static class Builder {
-        private CurrentGameSettings delegate;
+        private GameSettings delegate;
 
         public Builder() {
-            delegate = new CurrentGameSettings();
+            delegate = new GameSettings();
         }
 
         public Builder setGameFieldSize(int gameFieldSize) {
@@ -114,12 +113,12 @@ public class CurrentGameSettings {
             return this;
         }
 
-        public CurrentGameSettings build() {
+        public GameSettings build() {
             if (delegate != null) {
                 setShipPlacementQueue();
-                currentGameSettings = delegate;
+                gameSettings = delegate;
                 delegate = null;
-                return currentGameSettings;
+                return gameSettings;
             } else {
                 throw new CommonBaseException.BuilderReuseException("CurrentGameSettings builder reusing");
             }

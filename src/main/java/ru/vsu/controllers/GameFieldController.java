@@ -12,11 +12,11 @@ import javafx.scene.layout.RowConstraints;
 import ru.vsu.FXEngine;
 import ru.vsu.components.GameFieldButton;
 import ru.vsu.components.GameFieldButton.FieldType;
-import ru.vsu.config.CurrentGameSettings;
+import ru.vsu.config.GameSettings;
 import ru.vsu.domain.CellType;
-import ru.vsu.game_engine.GameBattleEngine;
-import ru.vsu.game_engine.GameEngine;
-import ru.vsu.game_engine.GamePrepareEngine;
+import ru.vsu.game_engine.game.GameBattleEngine;
+import ru.vsu.game_engine.game.GameEngine;
+import ru.vsu.game_engine.game.GamePrepareEngine;
 import ru.vsu.utils.StaticGameInfoAccessor;
 
 /**
@@ -56,14 +56,14 @@ public class GameFieldController {
         gridPane.getColumnConstraints().removeAll(gridPane.getColumnConstraints());
         gridPane.getRowConstraints().removeAll(gridPane.getRowConstraints());
 
-        final CurrentGameSettings currentGameSettings = CurrentGameSettings.getCurrentGameSettings();
-        for (int column = 0; column < currentGameSettings.getGameFieldSize() + 1; column++) {
+        final GameSettings gameSettings = GameSettings.getGameSettings();
+        for (int column = 0; column < gameSettings.getGameFieldSize() + 1; column++) {
             gridPane.getColumnConstraints().add(new ColumnConstraints() {{
-                setPercentWidth(100d / (currentGameSettings.getGameFieldSize() + 1));
+                setPercentWidth(100d / (gameSettings.getGameFieldSize() + 1));
                 setHalignment(HPos.CENTER);
             }});
             gridPane.getRowConstraints().add(new RowConstraints() {{
-                setPercentHeight(100d / (currentGameSettings.getGameFieldSize() + 1));
+                setPercentHeight(100d / (gameSettings.getGameFieldSize() + 1));
                 setValignment(VPos.CENTER);
             }});
             if (column > 0) {
@@ -74,9 +74,9 @@ public class GameFieldController {
     }
 
     private void addEmptyCellsToPlayerGridPane(GridPane gridPane) {
-        final CurrentGameSettings currentGameSettings = CurrentGameSettings.getCurrentGameSettings();
-        for (int row = 1; row < currentGameSettings.getGameFieldSize() + 1; row++) {
-            for (int column = 1; column < currentGameSettings.getGameFieldSize() + 1; column++) {
+        final GameSettings gameSettings = GameSettings.getGameSettings();
+        for (int row = 1; row < gameSettings.getGameFieldSize() + 1; row++) {
+            for (int column = 1; column < gameSettings.getGameFieldSize() + 1; column++) {
                 gridPane.add(new GameFieldButton(column, row, FieldType.Player) {{
                     setCellType(CellType.Sea);
                     setMaxHeight(Double.MAX_VALUE);
@@ -84,10 +84,10 @@ public class GameFieldController {
                     setOnMouseEntered(mouseEvent -> getStyleClass().add("under-mouse-grid-cell"));
                     setOnMouseExited(mouseEvent -> getStyleClass().remove("under-mouse-grid-cell"));
                     setOnMousePressed(mouseEvent -> {
+                        gameEngine.processGameFieldButtonClick(this);
                         if (gameEngine.getGameStatus().equals(GameEngine.GameStatus.PreparingEnd)) {
                             gameEngine = new GameBattleEngine();
                         }
-                        gameEngine.processGameFieldButtonClick(this);
                     });
                 }}, column, row);
             }
@@ -95,9 +95,9 @@ public class GameFieldController {
     }
 
     private void addEmptyCellsToEnemyGridPane(GridPane gridPane) {
-        final CurrentGameSettings currentGameSettings = CurrentGameSettings.getCurrentGameSettings();
-        for (int row = 1; row < currentGameSettings.getGameFieldSize() + 1; row++) {
-            for (int column = 1; column < currentGameSettings.getGameFieldSize() + 1; column++) {
+        final GameSettings gameSettings = GameSettings.getGameSettings();
+        for (int row = 1; row < gameSettings.getGameFieldSize() + 1; row++) {
+            for (int column = 1; column < gameSettings.getGameFieldSize() + 1; column++) {
                 gridPane.add(new GameFieldButton(column, row, FieldType.Enemy) {{
                     setCellType(CellType.Sea);
                     setMaxHeight(Double.MAX_VALUE);

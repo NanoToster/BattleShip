@@ -1,4 +1,4 @@
-package ru.vsu.game_engine;
+package ru.vsu.game_engine.game;
 
 import ru.vsu.components.GameFieldButton;
 
@@ -16,6 +16,9 @@ public interface GameEngine {
         PreparingEnd,
 
         PlayersTurn,
-        AITurn
+        AITurn,
+
+        PlayerWin,
+        AiWin
     }
 }

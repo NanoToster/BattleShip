@@ -1,8 +1,8 @@
-package ru.vsu.game_engine;
+package ru.vsu.game_engine.game;
 
 import ru.vsu.components.GameFieldButton;
 import ru.vsu.components.GameFieldButton.FieldType;
-import ru.vsu.config.CurrentGameSettings;
+import ru.vsu.config.GameSettings;
 import ru.vsu.domain.CellType;
 import ru.vsu.utils.StaticGameInfoAccessor;
 
@@ -14,17 +14,17 @@ import java.util.List;
  * 18 December 2019
  */
 public class GamePrepareEngine implements GameEngine {
-    private CurrentGameSettings currentGameSettings;
+    private GameSettings gameSettings;
     private PreparingShip preparingShip;
 
     public GamePrepareEngine() {
         this.preparingShip = null;
-        this.currentGameSettings = CurrentGameSettings.getCurrentGameSettings();
+        this.gameSettings = GameSettings.getGameSettings();
     }
 
     @Override
     public GameStatus getGameStatus() {
-        if (currentGameSettings.getShipPlacementQueue().peek() == null) {
+        if (gameSettings.getShipPlacementQueue().peek() == null && preparingShip == null) {
             return GameStatus.PreparingEnd;
         }
         return GameStatus.Preparing;
@@ -37,7 +37,7 @@ public class GamePrepareEngine implements GameEngine {
         }
 
         if (this.preparingShip == null) {
-            final CellType nextShipInQueueType = currentGameSettings.getShipPlacementQueue().peek();
+            final CellType nextShipInQueueType = gameSettings.getShipPlacementQueue().peek();
             if (nextShipInQueueType == null) {
                 StaticGameInfoAccessor.appendGameLog("Prepare game ends");
                 return;
@@ -48,7 +48,7 @@ public class GamePrepareEngine implements GameEngine {
             }
 
             StaticGameInfoAccessor.appendGameLog("You start " + nextShipInQueueType + " placement");
-            currentGameSettings.getShipPlacementQueue().remove(nextShipInQueueType);
+            gameSettings.getShipPlacementQueue().remove(nextShipInQueueType);
             this.preparingShip = new PreparingShip(gameFieldButton.getColumn(), gameFieldButton.getRow(), nextShipInQueueType);
             if (nextShipInQueueType.getRange() > 1) {
                 gameFieldButton.setCellType(CellType.Selected);
@@ -101,7 +101,7 @@ public class GamePrepareEngine implements GameEngine {
 
         int inc = vectorRow > startRow ? 1 : -1;
         for (int range = 0; Math.abs(range) < preparingShip.cellType.getRange(); range = range + inc) {
-            if (startRow + range < 1 || startRow + range > currentGameSettings.getGameFieldSize()) {
+            if (startRow + range < 1 || startRow + range > gameSettings.getGameFieldSize()) {
                 StaticGameInfoAccessor.appendGameLog("To close to game field border");
                 return false;
             }
@@ -124,7 +124,7 @@ public class GamePrepareEngine implements GameEngine {
 
         int inc = vectorColumn > startColumn ? 1 : -1;
         for (int range = 0; Math.abs(range) < preparingShip.cellType.getRange(); range = range + inc) {
-            if (startColumn + range < 1 || startColumn + range > currentGameSettings.getGameFieldSize()) {
+            if (startColumn + range < 1 || startColumn + range > gameSettings.getGameFieldSize()) {
                 StaticGameInfoAccessor.appendGameLog("To close to game field border");
                 return false;
             }

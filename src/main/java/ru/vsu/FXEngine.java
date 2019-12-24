@@ -13,17 +13,13 @@ import java.io.IOException;
  */
 public class FXEngine {
     private static Scene mainMenuScene;
-    private static Scene gameFieldScene;
     private static Stage primaryStage;
 
-    static void initFx(Stage stage) throws IOException {
+    static void initFx(Stage stage) {
         primaryStage = stage;
-        primaryStage.setWidth(1280);
-        primaryStage.setHeight(900);
 
         mainMenuScene = new Scene(FXEngine.loadFXML("main_menu.fxml"));
-        gameFieldScene = new Scene(FXEngine.loadFXML("game_field.fxml"));
-        gameFieldScene.getStylesheets().add("ru/vsu/styles/game_field.css");
+        mainMenuScene.getStylesheets().add("ru/vsu/styles/main_menu.css");
 
         setPrimaryScene(mainMenuScene);
     }
@@ -33,9 +29,14 @@ public class FXEngine {
         primaryStage.show();
     }
 
-    private static Parent loadFXML(String fxmlFileName) throws IOException {
-        FXMLLoader fxmlLoader = new FXMLLoader(App.class.getResource(fxmlFileName));
-        return fxmlLoader.load();
+    private static Parent loadFXML(String fxmlFileName) {
+        try {
+            FXMLLoader fxmlLoader = new FXMLLoader(App.class.getResource(fxmlFileName));
+            return fxmlLoader.load();
+        } catch (final IOException ex) {
+            System.out.println("Some problems with files: " + ex);
+            throw new NullPointerException();
+        }
     }
 
     public static Scene getMainMenuScene() {
@@ -43,6 +44,8 @@ public class FXEngine {
     }
 
     public static Scene getGameFieldScene() {
+        Scene gameFieldScene = new Scene(FXEngine.loadFXML("game_field.fxml"));
+        gameFieldScene.getStylesheets().add("ru/vsu/styles/game_field.css");
         return gameFieldScene;
     }
 }

@@ -51,4 +51,10 @@ public enum CellType {
                 CellType.Inv_CommonShip_4, CellType.Inv_CommonShip_3, CellType.Inv_CommonShip_2,
                 CellType.Inv_CommonShip_1, CellType.Inv_Submarine, CellType.Inv_Mine, CellType.Inv_Minesweeper);
     }
+
+    public static List<CellType> getAllCommonUnitsList() {
+        return List.of(CellType.CommonShip_4, CellType.CommonShip_3, CellType.CommonShip_2,
+                CellType.CommonShip_1, CellType.Inv_CommonShip_4, CellType.Inv_CommonShip_3, CellType.Inv_CommonShip_2,
+                CellType.Inv_CommonShip_1, CellType.Inv_Submarine, CellType.Submarine);
+    }
 }

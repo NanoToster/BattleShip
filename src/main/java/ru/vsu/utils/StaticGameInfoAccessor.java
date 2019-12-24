@@ -4,8 +4,11 @@ import javafx.scene.Node;
 import javafx.scene.control.TextArea;
 import javafx.scene.layout.GridPane;
 import ru.vsu.components.GameFieldButton;
+import ru.vsu.domain.CellType;
 
 import java.util.Optional;
+
+import static ru.vsu.config.GameSettings.getGameSettings;
 
 /**
  * @author Ivan Rovenskiy
@@ -32,6 +35,14 @@ public class StaticGameInfoAccessor {
         return opponentGridPane;
     }
 
+    public static void setPlayerGridPane(GridPane playerGridPane) {
+        StaticGameInfoAccessor.playerGridPane = playerGridPane;
+    }
+
+    public static void setOpponentGridPane(GridPane opponentGridPane) {
+        StaticGameInfoAccessor.opponentGridPane = opponentGridPane;
+    }
+
     public static GameFieldButton getCellInPlayersGrid(final int row, final int column) {
         return getCellFromGrid(playerGridPane, row, column);
     }
@@ -46,13 +57,5 @@ public class StaticGameInfoAccessor {
                 .findFirst();
 
         return (GameFieldButton) nodeFromPlayersGridOptional.orElse(null);
-    }
-
-    public static void setPlayerGridPane(GridPane playerGridPane) {
-        StaticGameInfoAccessor.playerGridPane = playerGridPane;
-    }
-
-    public static void setOpponentGridPane(GridPane opponentGridPane) {
-        StaticGameInfoAccessor.opponentGridPane = opponentGridPane;
     }
 }
